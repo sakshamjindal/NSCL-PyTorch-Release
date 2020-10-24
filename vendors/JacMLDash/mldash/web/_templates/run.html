@@ -1,0 +1,114 @@
+{% autoescape None %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#desc/{{ desc.desc_name }}" onClick="loadPage(this)">{{ desc.desc_name }}</a></li>
+            <li class="breadcrumb-item"><a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}" onClick=loadPage(this)>{{ expr.expr_name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ run.run_name }}</li>
+      </ol>
+    </nav>
+</div>
+
+<div class="experiment">
+    <dl class="row">
+        {% if len(run_methods) > 0 %}
+        <dt>Customized Commands</dt>
+        <dd>
+            {% for cmd in run_methods %}
+            <a href="javascript:;" onClick="runCustomizedCommand(this)" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ run.run_name }}" data-cmd="{{ cmd.__name__ }}">[{{cmd.command_name}}]</a>
+            {% end %}
+        </dd>
+        {% end %}
+        <dt>Run Description <a href="javascript:;" onClick="updateText(this)" id="edit-desc-link" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ run.run_name }}" data-key="run_description" data-preid="edit-desc">Edit</a></dt>
+        <dd><pre class="pre-url" id="edit-desc">{{ run.run_description }}</pre></dd>
+        <dt>Run Notes <a href="javascript:;" onClick="updateText(this)" id="edit-note-link" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ run.run_name }}" data-key="run_notes" data-preid="edit-note">Edit</a></dt>
+        <dd><pre class="pre-url" id="edit-note">{{ run.run_notes }}</pre></dd>
+        <dt>Create Time</dt>
+        <dd>{{ run.create_time }}</dd>
+        <dt>Update Time</dt>
+        <dd>{{ run.update_time }}</dd>
+
+        {% if run.refer is not None %}
+        <dt>Parent</dt>
+        <dd>
+        <a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}/run/{{ run.refer.run_name }}" onClick="loadPage(this)" class="run-link" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ run.refer.run_name }}">{{ run.refer.run_name }}</a>
+        </dd>
+        {% end %}
+
+        <dt>Metrics</dt>
+        <dd>{{ format_kv(run.metrics) }}</dd>
+        <dt>Command</dt>
+        <dd><code>{{ run.command }}</code></dd>
+        <dt>Args</dt>
+        <dd>{{ format_kv(run.args) }}</dd>
+        <dt>Configs</dt>
+        <dd>{{ format_kv_recursive_flat(run.configs) }}</dd>
+        {% for k, v in format_extra_items(run).items() %}
+        <dt>{{ k }}</dt>
+        <dd>{{ v }}</dd>
+        {% end %}
+        {% if run.metainfo_file is not None %}
+        <dt>Metainfo File</dt>
+        <dd>{{ format_log_fpath(run.metainfo_file) }}</dd>
+        {% end %}
+        {% if run.log_file is not None %}
+        <dt>Log File</dt>
+        <dd>{{ format_log_fpath(run.log_file) }}</dd>
+        {% end %}
+        {% if run.meter_file is not None %}
+        <dt>Meter File</dt>
+        <dd>{{ format_log_fpath(run.meter_file) }}</dd>
+        {% end %}
+        {% if run.tb_dir is not None %}
+        <dt>TensorBoard Dir</dt>
+        <dd><pre>{{ run.tb_dir }}</pre></dd>
+        {% end %}
+        <dt>Extra Information</dt>
+        <dd>{{ format_kv_recursive(run.extra_info) }}</dd>
+    </dl>
+
+    {% if len(run.referee) > 0 %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="header clearfix">
+                            <h5 class="float-left">Sub-Runs</h5>
+                            <div class="float-right">
+                                <a href="javascript:;" onClick="deleteRuns(this)">Delete</a>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rrun in run.referee %}
+                {% if not is_deleted(rrun) %}
+                <tr>
+                    <td class="run-row" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ rrun.run_name }}" data-highlight="{{ format_kv_inline_tb(rrun.highlight_args) }}">
+                        <div class="d-flex">
+                            <div class="mr-2"><input type="checkbox" /></div>
+                            <div>
+                                <div><b>SubRun:</b>
+                                    <a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}/run/{{ rrun.run_name }}" onClick="loadPage(this)" class="run-link">{{ rrun.run_name }}</a>
+                                    (<b>Created:</b> {{ rrun.create_time }}; <b>Updated</b>: {{ rrun.update_time }})
+                                </div>
+                                <div><b>Metrics:</b> {{ format_kv_inline(rrun.metrics) }}</div>
+                                <div><b>Command:</b> <code>{{ rrun.command }}</code></div>
+                                <div><b>Highlight args:</b> {{ format_kv_inline(rrun.highlight_args) }}</div>
+                                <div><b>Highlight configs:</b> {{ format_kv_inline(rrun.highlight_configs) }}</div>
+                                <div><b>Description:</b> <span class="inline-pre pre-url">{{ rrun.run_description }}</span></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% end %}
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+    {% end %}
+</div>
+

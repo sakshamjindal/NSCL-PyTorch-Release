@@ -1,0 +1,147 @@
+{% autoescape None %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% if star_only %}
+            <li class="breadcrumb-item active" aria-current="page">Stared Runs</li>
+            {% else %}
+            <li class="breadcrumb-item active" aria-current="page">Overview</li>
+            {% end %}
+        </ol>
+    </nav>
+</div>
+
+<div class="experiment">
+    <div class="table-responsive">
+
+        {% if not star_only %}
+        <table class="table table-striped table-bordered table-sm">
+            <thead>
+                <tr><th><h5>Descs</h5></th></tr>
+            </thead>
+            <tbody>
+                {% for desc in descs %}
+                <tr>
+                    <td>
+                        <div><b>Desc:</b>
+                            <a href="#desc/{{ desc.desc_name }}/" onClick="loadPage(this)" onClick="showRun(this)" class="expr-link">{{ desc.desc_name }}</a>
+                            (<b>Created:</b> {{ desc.create_time }}; <b>Updated</b>: {{ desc.update_time }})
+                        </div>
+                        <div><b>Metrics:</b> {{ format_kv_inline(desc.metrics) }}</div>
+                        <div><b>Description:</b> <span class="inline-pre pre-url">{{ desc.desc_description }}</span></div>
+                    </td>
+                </tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead>
+                <tr><th><h5>Experiments</h5></th></tr>
+            </thead>
+            <tbody>
+                {% for desc in descs %}
+                {% for expr in desc.exprs %}
+                <tr>
+                    <td>
+                        <div><b>Experiment:</b>
+                            <a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}" onClick="loadPage(this)" onClick="showRun(this)" class="expr-link">{{ desc.desc_name }}/{{ expr.expr_name }}</a>
+                            (<b>Created:</b> {{ expr.create_time }}; <b>Updated</b>: {{ expr.update_time }})
+                        </div>
+                        <div><b>Metrics:</b> {{ format_kv_inline(expr.metrics) }}</div>
+                        <div><b>Description:</b> <span class="inline-pre pre-url">{{ expr.expr_description }}</span></div>
+                    </td>
+                </tr>
+                {% end %}
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+
+    {% end %}
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="header clearfix">
+                            <h5 class="float-left">Runs</h5>
+                            <div class="float-right">
+                                <a href="javascript:;" onClick="runTensorboard(this)">Tensorboard</a> /
+                                <a href="javascript:;" onClick="deleteRuns(this)">Delete</a>
+                            </div>
+                        </div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for desc in descs %}
+                {% for expr in desc.exprs %}
+                {% for run in expr.runs %}
+                {% if run.is_master and not is_deleted(run) %}
+                {% if not star_only or is_stared(run) %}
+                <tr>
+                    <td class="run-row" data-desc="{{ desc.desc_name }}" data-expr="{{ expr.expr_name }}" data-run="{{ run.run_name }}" data-highlight="{{ format_kv_inline_tb(run.highlight_args) }}">
+                        <div class="d-flex">
+                        <div class="mr-2">
+                            <input type="checkbox" />
+                            {% if is_stared(run) %} <br /><i class="fa fa-star" style="color: #ffcc66;"></i> {% end %}
+                        </div>
+                        <div class="">
+                            <div>
+                                <b>Run:</b>
+                                <a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}/run/{{ run.run_name }}" onClick="loadPage(this)" class="run-link">{{ desc.desc_name }}/{{ expr.expr_name }}/{{ run.run_name }}</a>
+                                (<b>Created:</b> {{ run.create_time }}; <b>Updated</b>: {{ run.update_time }})
+                                {% if is_stared(run) %} <a href="javascript:;" onClick="unstarRun(this)">[Unstar]</a> {% else %} <a href="javascript:;" onClick="starRun(this)">[Star]</a> {% end %}
+                            </div>
+                            <div><b>Metrics:</b> {{ format_kv_inline(run.metrics) }}</div>
+                            <div><b>Command:</b> <code>{{ run.command }}</code></div>
+                            <div><b>Highlight args:</b> {{ format_kv_inline(run.highlight_args) }}</div>
+                            <div><b>Highlight configs:</b> {{ format_kv_inline(run.highlight_configs) }}</div>
+                            {% for k, v in format_extra_summary_items(run).items() %}
+                            <div><b>{{ k }}:</b> {{ v }}</div>
+                            {% end %}
+                            {% if run.refer is not None %}
+                            <div><b>Parent:</b> <span><a href="#desc/{{ desc.desc_name }}/expr/{{ expr.expr_name }}/run/{{ run.refer.run_name }}" onClick="loadPage(this)" class="run-link" >{{ run.refer.run_name }}</a></span></div>
+                            {% end %}
+                            <div><b>Description:</b> <span class="inline-pre pre-url">{{ run.run_description }}</span></div>
+                        </div>
+                        </div>
+
+                    </td>
+                </tr>
+                {% end %}
+                {% end %}
+                {% end %}
+                {% end %}
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+    {% if len(tensorboards) > 0 %}
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered table-sm">
+            <thead>
+                <tr><th><h5>TensorBoards</h5></th></tr>
+            </thead>
+            <tbody>
+                {% for run in tensorboards %}
+                <tr><td>
+                    <div class="header clearfix">
+                    <div class="float-left">
+                        <b>Link:</b> {{ format_tb_link(run['port']) }}
+                    </div>
+                    <div class="float-right"><a href="javascript:;" onClick="termTensorboard(this);" data-index="{{ run['index'] }}">Terminate</a></div>
+                    </div>
+                    <div><b>Log Dirs:</b> {{ format_kv(run['logdirs']) }}</div>
+                </td></tr>
+                {% end %}
+            </tbody>
+        </table>
+    </div>
+    {% end %}
+</div>
