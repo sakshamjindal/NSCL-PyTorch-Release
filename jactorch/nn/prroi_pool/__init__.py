@@ -12,10 +12,8 @@ from jacinle.utils.vendor import has_vendor, requires_vendors
 
 __all__ = ['PrRoIPool2D']
 
-
-if has_vendor('prroi_pool'):
-    from prroi_pool import PrRoIPool2D
-else:
-    from jacinle.utils.meta import make_dummy_func
-    PrRoIPool2D = requires_vendors('prroi_pool')(make_dummy_func())
-
+# if has_vendor('prroi_pool'):
+from vendors.PreciseRoIPooling.pytorch.prroi_pool.prroi_pool import PrRoIPool2D
+# else:
+#     from jacinle.utils.meta import make_dummy_func
+#     PrRoIPool2D = requires_vendors('prroi_pool')(make_dummy_func())

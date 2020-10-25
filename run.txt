@@ -1,0 +1,13 @@
+python trainval.py --desc experiments/clevr/desc_nscl_derender.py \
+                    --training-target derender --curriculum all \
+                    --dataset clevr \
+                    --data-dir ~/CLEVR_v1.0/train \
+                    --data_vocab_json ~/CLEVR_v1.0/train/vocab.json \
+                    --data_scenes_json ~/CLEVR_v1.0/train/scenes.json \
+                    --data_questions_json ~/CLEVR_v1.0/train/CLEVR_train_questions.json \
+                    --batch-size 1 \
+                    --epoch 1 \
+                    --validation-interval 1 \
+                    --save-interval 15 \
+                    --data-split 0.95  \
+                    --use_gpu False

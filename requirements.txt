@@ -1,2 +1,4 @@
 visdom
 sklearn
+nltk
+scipy
